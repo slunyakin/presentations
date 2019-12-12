@@ -1,0 +1,16 @@
+{
+	"name": "SourceDataset_hf8",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "MyBlobStorage",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureBlob",
+		"typeProperties": {
+			"fileName": "",
+			"folderPath": "dataflow/Data"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,54 @@
+{
+	"name": "WranglingDF",
+	"properties": {
+		"type": "WranglingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"name": "transaction",
+					"script": "",
+					"dataset": {
+						"referenceName": "transaction",
+						"type": "DatasetReference"
+					},
+					"typeProperties": {
+						"readMode": null
+					}
+				},
+				{
+					"name": "Customer",
+					"script": "",
+					"dataset": {
+						"referenceName": "Customer",
+						"type": "DatasetReference"
+					},
+					"typeProperties": {
+						"readMode": null
+					}
+				},
+				{
+					"name": "zip_codes",
+					"script": "",
+					"dataset": {
+						"referenceName": "zip_codes",
+						"type": "DatasetReference"
+					},
+					"typeProperties": {
+						"readMode": null
+					}
+				}
+			],
+			"sinks": [
+				{
+					"name": "Sink1",
+					"dataset": {
+						"referenceName": "Result",
+						"type": "DatasetReference"
+					},
+					"script": "sink(input(\n\t\tstate as string,\n\t\tproduct as string,\n\t\tcount as string,\n\t\ttotal as string,\n\t\tminprice as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false) ~> Sink1"
+				}
+			],
+			"script": "section Section1;\r\nshared transaction = let\r\n  AdfDoc = AzureStorage.DataLakeContents(\"https://adlsgen2slun.dfs.core.windows.net/refineddata/Wrangling/Sales/transactions/lab_2010_transactions.csv\"),\r\n  Csv = Csv.Document(AdfDoc, [Delimiter = \",\", Encoding = TextEncoding.Utf8, QuoteStyle = QuoteStyle.Csv]),\r\n  PromotedHeaders = Table.PromoteHeaders(Csv, [PromoteAllScalars = true])\r\nin\r\n  PromotedHeaders;\r\nshared Customer = let\r\n  AdfDoc = AzureStorage.DataLakeContents(\"https://adlsgen2slun.dfs.core.windows.net/refineddata/Wrangling/Sales/lab_customers.csv\"),\r\n  Csv = Csv.Document(AdfDoc, [Delimiter = \",\", Encoding = TextEncoding.Utf8, QuoteStyle = QuoteStyle.Csv]),\r\n  PromotedHeaders = Table.PromoteHeaders(Csv, [PromoteAllScalars = true])\r\nin\r\n  PromotedHeaders;\r\nshared zip_codes = let\r\n  AdfDoc = AzureStorage.DataLakeContents(\"https://adlsgen2slun.dfs.core.windows.net/refineddata/Wrangling/Sales/zip_to_state_map.csv\"),\r\n  Csv = Csv.Document(AdfDoc, [Delimiter = \"\t\", Encoding = TextEncoding.Utf8, QuoteStyle = QuoteStyle.Csv])\r\nin\r\n  Csv;\r\nshared UserQuery = let\r\n  Source = transaction,\r\n  #\"Changed column type\" = Table.TransformColumnTypes(Source, {{\"ticket_price\", type number}, {\"transaction_date\", type date}}),\r\n  #\"Filtered rows\" = Table.SelectRows(#\"Changed column type\", each [ticket_price] >= 1),\r\n  #\"Replaced value\" = Table.ReplaceValue(#\"Filtered rows\", \"basic\", \"silver\", Replacer.ReplaceText, {\"product\"}),\r\n  #\"Replaced value 1\" = Table.ReplaceValue(#\"Replaced value\", \"deluxe\", \"gold\", Replacer.ReplaceText, {\"product\"}),\r\n  #\"Inserted conditional column\" = Table.AddColumn(#\"Replaced value 1\", \"disc\", each if [discount] = \"5%\" then 0.95 else if [discount] = \"10%\" then 0.9 else if [discount] = \"20%\" then 0.8 else 1),\r\n  #\"Merged queries\" = Table.NestedJoin(#\"Inserted conditional column\", {\"customer_id\"}, Customer, {\"customer_id\"}, \"Customer\", JoinKind.LeftOuter),\r\n  #\"Expanded Customer\" = Table.ExpandTableColumn(#\"Merged queries\", \"Customer\", {\"address_state\", \"address_zip\", \"start_date\", \"end_date\"}, {\"address_state\", \"address_zip\", \"start_date\", \"end_date\"}),\r\n  #\"Replaced value 2\" = Table.ReplaceValue(#\"Expanded Customer\", \"\", \"2050/01/01\", Replacer.ReplaceValue, {\"end_date\"}),\r\n  #\"Changed column type 1\" = Table.TransformColumnTypes(#\"Replaced value 2\", {{\"end_date\", type date}, {\"start_date\", type date}, {\"disc\", type number}}),\r\n  #\"Merged queries 1\" = Table.NestedJoin(#\"Changed column type 1\", {\"address_zip\"}, zip_codes, {\"Column1\"}, \"zip_codes\", JoinKind.LeftOuter),\r\n  #\"Expanded zip_codes\" = Table.ExpandTableColumn(#\"Merged queries 1\", \"zip_codes\", {\"Column2\"}, {\"state\"}),\r\n  #\"Inserted conditional column 1\" = Table.AddColumn(#\"Expanded zip_codes\", \"Custom\", each if [transaction_date] >= [start_date] and [transaction_date] <= [end_date] then 1 else 0),\r\n  #\"Filtered rows 1\" = Table.SelectRows(#\"Inserted conditional column 1\", each [Custom] = 1)\r\nin\r\n  #\"Filtered rows 1\";\r\n"
+		}
+	}
+}

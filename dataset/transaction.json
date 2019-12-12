@@ -1,0 +1,45 @@
+{
+	"name": "transaction",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDataLakeStorage1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "Wrangling/Sales/transactions",
+				"fileSystem": "refineddata"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "customer_id",
+				"type": "String"
+			},
+			{
+				"name": "transaction_date",
+				"type": "String"
+			},
+			{
+				"name": "ticket_price",
+				"type": "String"
+			},
+			{
+				"name": "discount",
+				"type": "String"
+			},
+			{
+				"name": "product",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
