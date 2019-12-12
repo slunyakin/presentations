@@ -1,0 +1,91 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "ADWrangling"
+		},
+		"AzureDataLakeStorage1_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'AzureDataLakeStorage1'"
+		},
+		"MyBlobStorage_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'MyBlobStorage'"
+		},
+		"DestinationDataset_hf8_properties_typeProperties_fileName": {
+			"type": "string",
+			"defaultValue": ""
+		},
+		"DestinationDataset_hf8_properties_typeProperties_folderPath": {
+			"type": "string",
+			"defaultValue": "refineddata"
+		},
+		"SourceDataset_hf8_properties_typeProperties_fileName": {
+			"type": "string",
+			"defaultValue": ""
+		},
+		"SourceDataset_hf8_properties_typeProperties_folderPath": {
+			"type": "string",
+			"defaultValue": "dataflow/Data"
+		},
+		"AzureDataLakeStorage1_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://adlsgen2slun.dfs.core.windows.net"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI to storage account containing linked ARM templates"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Sas token to storage account containing linked ARM templates"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"AzureDataLakeStorage1_accountKey": {
+						"value": "[parameters('AzureDataLakeStorage1_accountKey')]"
+					},
+					"MyBlobStorage_connectionString": {
+						"value": "[parameters('MyBlobStorage_connectionString')]"
+					},
+					"AzureDataLakeStorage1_properties_typeProperties_url": {
+						"value": "[parameters('AzureDataLakeStorage1_properties_typeProperties_url')]"
+					},
+					"DestinationDataset_hf8_properties_typeProperties_fileName": {
+						"value": "[parameters('DestinationDataset_hf8_properties_typeProperties_fileName')]"
+					},
+					"DestinationDataset_hf8_properties_typeProperties_folderPath": {
+						"value": "[parameters('DestinationDataset_hf8_properties_typeProperties_folderPath')]"
+					},
+					"SourceDataset_hf8_properties_typeProperties_fileName": {
+						"value": "[parameters('SourceDataset_hf8_properties_typeProperties_fileName')]"
+					},
+					"SourceDataset_hf8_properties_typeProperties_folderPath": {
+						"value": "[parameters('SourceDataset_hf8_properties_typeProperties_folderPath')]"
+					}
+				}
+			},
+			"dependsOn": []
+		}
+	]
+}
